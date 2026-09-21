@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Evolución de Internet — Línea de Tiempo Interactiva</title>
+<style>
+  :root{
+    --bg1:#0b1220; --bg2:#14203c; --panel:#1a2745; --panel2:#223258;
+    --ink:#eaf0ff; --muted:#9fb0d0;
+    --cyan:#39c6d6; --teal:#2dd4bf; --orange:#ff9f45; --violet:#a78bfa; --red:#ff6b6b; --blue:#5b8def;
+    --card:230px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));color:var(--ink);min-height:100vh}
+  header{padding:38px 46px 18px}
+  .kicker{letter-spacing:3px;text-transform:uppercase;font-size:12px;color:var(--teal);font-weight:700}
+  h1{font-size:clamp(26px,4vw,44px);margin:8px 0 6px}
+  h1 span{color:var(--cyan)}
+  .sub{color:var(--muted);max-width:900px;font-size:15px;line-height:1.55}
+  .stats{display:flex;flex-wrap:wrap;gap:12px;margin:20px 0 6px}
+  .stat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px 18px}
+  .stat b{display:block;font-size:20px;color:var(--cyan)}
+  .stat span{font-size:12px;color:var(--muted)}
+  nav.chips{display:flex;gap:8px;flex-wrap:wrap;padding:12px 46px 4px}
+  .chip{cursor:pointer;border:1px solid rgba(255,255,255,.2);background:transparent;color:var(--ink);border-radius:999px;padding:7px 16px;font-size:13px;transition:.2s}
+  .chip:hover{background:rgba(255,255,255,.1)}
+  .chip.active{background:var(--cyan);border-color:var(--cyan);color:#04222a;font-weight:700}
+  .bar-wrap{padding:8px 46px 0;display:flex;align-items:center;gap:12px}
+  .arrow{cursor:pointer;border:none;background:rgba(255,255,255,.08);color:var(--ink);width:38px;height:38px;border-radius:50%;font-size:17px;flex:none;transition:.2s}
+  .arrow:hover{background:var(--cyan);color:#04222a}
+  .track-wrap{overflow:hidden}
+  .track{display:flex;gap:18px;overflow-x:auto;scroll-behavior:smooth;padding:18px 46px 30px;scrollbar-width:thin;scrollbar-color:var(--cyan) transparent}
+  .track::-webkit-scrollbar{height:8px}
+  .track::-webkit-scrollbar-thumb{background:var(--cyan);border-radius:4px}
+  .card{flex:0 0 var(--card);scroll-snap-align:start;background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid rgba(255,255,255,.12);border-radius:18px;overflow:hidden;cursor:pointer;transition:transform .25s,border-color .25s,opacity .3s;display:flex;flex-direction:column}
+  .card:hover{transform:translateY(-8px);border-color:var(--accent,var(--cyan))}
+  .card.hidden{display:none}
+  .thumb{height:135px;overflow:hidden;position:relative;flex:none}
+  .thumb img{width:100%;height:100%;object-fit:cover;filter:saturate(.9)}
+  .year{position:absolute;left:10px;top:10px;background:var(--accent,var(--cyan));color:#04222a;font-weight:800;font-size:13px;padding:3px 10px;border-radius:999px}
+  .cbody{padding:14px 15px 16px;display:flex;flex-direction:column;gap:8px;flex:1}
+  .cbody h2{font-size:16.5px;line-height:1.25}
+  .tag{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent,var(--cyan));font-weight:700}
+  .cbody p{font-size:13px;color:#cdd8ef;line-height:1.5;flex:1}
+  .dato{font-size:12px;color:var(--muted);border-left:3px solid var(--accent,var(--cyan));padding-left:8px}
+  .vermas{align-self:flex-start;font-size:12.5px;font-weight:700;color:var(--accent,var(--cyan))}
+  .dots{display:flex;gap:6px;padding:0 46px}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--accent,var(--cyan));opacity:.9}
+  .dots{flex-wrap:wrap;gap:8px;margin-bottom:8px}
+  .legend-item{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted)}
+  /* modal */
+  .modal{position:fixed;inset:0;background:rgba(4,8,18,.82);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+  .modal.open{display:flex}
+  .sheet{background:linear-gradient(180deg,#1c2a4d,#16223f);max-width:860px;width:100%;max-height:92vh;overflow-y:auto;border-radius:20px;border:1px solid rgba(255,255,255,.15);padding:26px 28px}
+  .sheet .y{display:inline-block;background:var(--accent,var(--cyan));color:#04222a;font-weight:800;padding:3px 12px;border-radius:999px;font-size:13px;margin-bottom:10px}
+  .sheet h3{font-size:24px;margin-bottom:12px}
+  .sheet p{line-height:1.65;color:#dbe4f7;margin-bottom:12px;font-size:15px}
+  .sheet img{width:100%;border-radius:12px;margin:10px 0}
+  .frame{position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;margin:12px 0}
+  .frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .close{margin-top:6px;background:var(--cyan);border:none;color:#04222a;font-weight:800;padding:10px 22px;border-radius:999px;cursor:pointer}
+  .srclink{color:var(--teal);font-size:12.5px}
+  footer{padding:26px 46px 46px;color:var(--muted);font-size:13px}
+  footer h4{color:var(--ink);margin-bottom:10px}
+  footer ul{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:6px 20px}
+  footer a{color:#8fd4de;text-decoration:none}
+  footer a:hover{text-decoration:underline}
+  .credit{margin-top:16px;font-size:12px;color:#6f7f9f}
+  @media(max-width:640px){header,nav.chips,.bar-wrap,.track,footer{padding-left:20px;padding-right:20px}.card{--card:250px}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="kicker">Proyecto académico · Historia de la tecnología</div>
+  <h1>La Evolución de <span>Internet</span></h1>
+  <p class="sub">De un experimento militar a la red que conecta al 68&nbsp;% de la humanidad. Haz clic en cada hito para ver su historia ampliada, imágenes y un video explicativo.</p>
+  <div class="stats">
+    <div class="stat"><b>5.500 M</b><span>personas conectadas (UIT, 2024)</span></div>
+    <div class="stat"><b>68 %</b><span>de la población mundial en línea</span></div>
+    <div class="stat"><b>1969 → 2026</b><span>casi seis décadas de evolución</span></div>
+    <div class="stat"><b>+220 M</b><span>estudiantes en cursos abiertos en línea</span></div>
+  </div>
+</header>
+
+<nav class="chips" id="chips">
+  <button class="chip active" data-f="all">Todos</button>
+  <button class="chip" data-f="origenes">◉ Orígenes</button>
+  <button class="chip" data-f="web">◉ La Web</button>
+  <button class="chip" data-f="social">◉ Web social</button>
+  <button class="chip" data-f="movil">◉ Web móvil</button>
+  <button class="chip" data-f="ia">◉ IA</button>
+</nav>
+
+<div class="bar-wrap">
+  <button class="arrow" id="prev">‹</button>
+  <button class="arrow" id="next">›</button>
+  <div class="dots" id="legend">
+    <span class="legend-item"><span class="dot" style="background:var(--red)"></span>Orígenes</span>
+    <span class="legend-item"><span class="dot" style="background:var(--blue)"></span>Protocolos</span>
+    <span class="legend-item"><span class="dot" style="background:var(--teal)"></span>La Web</span>
+    <span class="legend-item"><span class="dot" style="background:var(--orange)"></span>Web social y móvil</span>
+    <span class="legend-item"><span class="dot" style="background:var(--violet)"></span>IA</span>
+  </div>
+</div>
+
+<div class="track-wrap"><div class="track" id="track">
+
+  <!-- 1969 -->
+  <article class="card" data-cat="origenes" style="--accent:var(--red)" data-year="29 de octubre de 1969"
+    data-title="ARPANET: el primer mensaje — «Lo»"
+    data-img="https://sspark.genspark.ai/i/fXuofm1SF1lBlyEs?width=2560"
+    data-video="Cut3D2JkcrQ"
+    data-src="https://www.icann.org/en/blogs/details/the-first-message-transmission-29-10-2019-en"
+    data-long="El 29 de octubre de 1969, a las 22:30, el estudiante Charley Kline intentó escribir «login» desde la Universidad de California en Los Ángeles (UCLA) hacia el computador del Instituto de Investigación de Stanford (SRI). El sistema colapsó tras las dos primeras letras: «Lo». Así nació ARPANET, la primera red de conmutación de paquetes, financiada por la agencia ARPA del Departamento de Defensa de EE. UU. En diciembre de ese año la red tenía apenas 4 nodos (UCLA, SRI, UCSB y la Universidad de Utah).">
+    <div class="thumb"><img src="https://sspark.genspark.ai/i/fXuofm1SF1lBlyEs?width=2560" alt="Primer mensaje de ARPANET" loading="lazy"><span class="year">1969</span></div>
+    <div class="cbody">
+      <span class="tag">Orígenes</span>
+      <h2>ARPANET: el primer mensaje — «Lo»</h2>
+      <p>Desde la UCLA, Charley Kline intentó escribir «login» hacia SRI; la red falló tras dos letras: «Lo». Nacía la primera red de conmutación de paquetes.</p>
+      <div class="dato">Dato: en diciembre de 1969 toda ARPANET tenía solo 4 computadoras conectadas.</div>
+      <span class="vermas">Haz clic para explorar →</span>
+    </div>
+  </article>
+
+  <!-- 1971 -->
+  <article class="card" data-cat="origenes" style="--accent:var(--red)" data-year="1971"
+    data-title="El primer correo electrónico: nace la @"
+    data-img="https://sspark.genspark.ai/i/bYRRyjyIRXjUaChN?width=2560"
+    data-video="mGG5o6vbKyQ"
+    data-src="https://en.wikipedia.org/wiki/Ray_Tomlinson"
+    data-long="Ray Tomlinson envió en 1971 el primer correo electrónico entre computadoras conectadas a ARPANET. Para indicar dónde estaba cada usuario eligió la arroba (@), un símbolo que apenas se usaba y que separa el nombre de la persona del nombre de la máquina. Esa convención sigue vigente en miles de millones de correos diarios y le dio a la red su primera gran aplicación de comunicación masiva.">
+    <div class="thumb"><img src="https://sspark.genspark.ai/i/bYRRyjyIRXjUaChN?width=2560" alt="Primera época de ARPANET" loading="lazy"><span class="year">1971</span></div>
+    <div class="cbody">
+      <span class="tag">Orígenes</span>
+      <h2>El primer correo electrónico: nace la @</h2>
+      <p>Ray Tomlinson envió el primer email entre máquinas de ARPANET y eligió la arroba para separar usuario y computadora: un símbolo que seguimos usando cada día.</p>
+      <div class="dato">Dato: Tomlinson confesó que nunca recordó qué escribió en ese primer mensaje.</div>
+      <span class="vermas">Haz clic para explorar →</span>
+    </div>
+  </article>
+
+  <!-- 1983 -->
+  <article class="card" data-cat="origenes" style="--accent:var(--blue)" data-year="1 de enero de 1983"
+    data-title="TCP/IP: el «flag day» que funda Internet"
+    data-img="https://sspark.genspark.ai/i/UuFf9gWCcYblRUAE?width=2560"
+    data-video="UMpEkZxeVcY"
+    data-src="https://en.wikipedia.org/wiki/Flag_day_(computing)"
+    data-long="El 1 de enero de 1983, conocido como «flag day», ARPANET reemplazó el protocolo NCP por la familia de protocolos TCP/IP: todos los equipos debían migrar ese mismo día o quedar fuera de la red. Al unificar el «idioma» de las computadoras se hizo posible conectar redes distintas entre sí —una red de redes—, y por eso esta fecha se considera el nacimiento del Internet moderno. TCP/IP sigue siendo el corazón de la red actual.">
+    <div class="thumb"><img src="https://sspark.genspark.ai/i/UuFf9gWCcYblRUAE?width=2560" alt="Mapa de ARPANET" loading="lazy"><span class="year">1983</span></div>
+    <div class="cbody">
+      <span class="tag">Protocolos</span>
+      <h2>TCP/IP: el «flag day» que funda Internet</h2>
+      <p>El 1 de enero de 1983 ARPANET migró de NCP a TCP/IP: migrar ese día o salir de la red. Con un lenguaje común nació la «red de redes».</p>
+      <div class="dato">Dato: TCP/IP sigue siendo, 40+ años después, el protocolo de Internet.</div>
+      <span class="vermas">Haz clic para explorar →</span>
+    </div>
+  </article>
+
+  <!-- 1989-91 -->
+  <article class="card" data-cat="web" style="--accent:var(--teal)" data-year="1989 – 1991"
+    data-title="La World Wide Web (Tim Berners-Lee, CERN)"
+    data-img="https://sspark.genspark.ai/i/IpDUXKR2scQM5nve?width=2560"
+    data-img2="https://sspark.genspark.ai/i/Q4aIx1VApCDL1aci?width=2560"
+    data-video="sSqZ_hJu9zA"
+    data-src="https://info.cern.ch/Proposal.html"
+    data-long="En marzo de 1989, el físico británico Tim Berners-Lee propuso al CERN un sistema de hipertexto para compartir investigaciones entre científicos; su jefe anotó en la portada: «vago, pero emocionante». En 1990 construyó el primer navegador y el primer servidor, y el 6 de agosto de 1991 se publicó la primera página web. En abril de 1993 el CERN liberó la tecnología como dominio público sin patentes: cualquier persona pudo usarla gratis, y eso permitió que la web se expandiera por el mundo.">
+    <div class="thumb"><img src="https://sspark.genspark.ai/i/IpDUXKR2scQM5nve?width=2560" alt="Tim Berners-Lee" loading="lazy"><span class="year">1989–91</span></div>
+    <div class="cbody">
+      <span class="tag">La Web</span>
+      <h2>La World Wide Web (Tim Berners-Lee, CERN)</h2>
+      <p>Berners-Lee propuso en 1989 la web de hipertextos; en 1991 publicó la primera página y el CERN liberó la tecnología gratis en 1993.</p>
+      <div class="dato">Dato: la primera web explicaba, precisamente, «qué es la World Wide Web».</div>
+      <span class="vermas">Haz clic para explorar →</span>
+    </div>
+  </article>
+
+  <!-- 1993-94 -->
+  <article class="card" data-cat="web" style="--accent:var(--teal)" data-year="1993 – 1994"
+    data-title="Navegadores: Mosaic y Netscape abren la web al mundo"
+    data-img="https://sspark.genspark.ai/i/BmGGvUf38tiuWrke?width=2560"
+    data-video="9hIQjrMHTv4"
+    data-src="https://distributedmuseum.illinois.edu/exhibit/mosaic/"
+    data-long="Mosaic (enero de 1993) fue el primer navegador popular porque mostraba imágenes junto al texto; Netscape Navigator (diciembre de 1994) llevó la web a millones de hogares y desató la «guerra de navegadores» contra Microsoft e Internet Explorer. Gracias a los navegadores, la web dejó de ser una herramienta de científicos y se convirtió en un medio de masas.">
+    <div class="thumb"><img src="https://sspark.genspark.ai/i/BmGGvUf38tiuWrke?width=2560" alt="Netscape Navigator 1.0" loading="lazy"><span class="year">1993–94</span></div>
+    <div class="cbody">
+      <span class="tag">La Web</span>
+      <h2>Navegadores: Mosaic y Netscape</h2>
+      <p>Mosaic mostró por primera vez imágenes junto al texto (1993) y Netscape Navigator (1994) llevó la web a millones de hogares.</p>
+      <div class="dato">Dato: en 1995 Netscape salió a bolsa y su acción subió un 75 % el primer día.</div>
+      <span class="vermas">Haz clic para explorar →</span>
+    </div>
+  </article>
+
+  <!-- 2004 -->
+  <article class="card" data-cat="social" style="--accent:var(--orange)" data-year="2004"
+    data-title="Web 2.0: los usuarios se vuelven creadores"
+    data-img="https://sspark.genspark.ai/i/ysbTKBJ9LfCJgTZI?width=2560"
+    data-video="GXJp9mJR2Q8"
+    data-src="https://www.oreilly.com/pub/a/web2/archive/what-is-web-20.html"
+    data-long="El término «Web 2.0» lo acuñó Darcy DiNucci en 1999 y se hizo famoso con la primera conferencia Web 2.0 de O'Reilly Media (San Francisco, octubre de 2004). La web pasó de solo lectura a participativa: Wikipedia (2001), YouTube (2005), Twitter (2006) y Facebook abierto al público (2006) convirtieron a los usuarios en creadores de contenido. Blogs, wikis y redes sociales transformaron la cultura, la política y la educación.">
+    <div class="thumb"><img src="https://sspark.genspark.ai/i/ysbTKBJ9LfCJgTZI?width=2560" alt="Redes sociales en un teléfono" loading="lazy"><span class="year">2004</span></div>
+    <div class="cbody">
+      <span class="tag">Web social</span>
+      <h2>Web 2.0: los usuarios se vuelven creadores</h2>
+      <p>Con Wikipedia, YouTube, Twitter y Facebook, la web se volvió participativa: crear, comentar y compartir ya no requería saber programar.</p>
+      <div class="dato">Dato: el lema de la época era «la web como plataforma».</div>
+      <span class="vermas">Haz clic para explorar →</span>
+    </div>
+  </article>
+
+  <!-- 2007 -->
+  <article class="card" data-cat="movil" style="--accent:var(--orange)" data-year="29 de junio de 2007"
+    data-title="Web móvil: Internet en el bolsillo"
+    data-img="https://sspark.genspark.ai/i/54eVeGCOhOh41isM?width=2560"
+    data-video="mGG5o6vbKyQ"
+    data-src="https://www.apple.com/newsroom/2007/06/28iPhone-Premieres-This-Friday-Night-at-Apple-Retail-Stores/"
+    data-long="El 29 de junio de 2007 salió a la venta el primer iPhone, con pantalla táctil y navegador «de verdad»; Android llegó en 2008 y las tiendas de aplicaciones cambiaron todo. Con 3G y luego 4G, Internet pasó del escritorio al bolsillo: conectados en cualquier lugar y a toda hora. Hoy la mayoría del tráfico web mundial proviene de teléfonos móviles, no de computadoras.">
+    <div class="thumb"><img src="https://sspark.genspark.ai/i/54eVeGCOhOh41isM?width=2560" alt="iPhone original de 2007" loading="lazy"><span class="year">2007</span></div>
+    <div class="cbody">
+      <span class="tag">Web móvil</span>
+      <h2>Web móvil: Internet en el bolsillo</h2>
+      <p>El iPhone (2007) y Android (2008) llevaron la red a la palma de la mano: apps, GPS, cámaras y conexión permanente.</p>
+      <div class="dato">Dato: hoy la mayoría de las visitas web del mundo vienen de un teléfono.</div>
+      <span class="vermas">Haz clic para explorar →</span>
+    </div>
+  </article>
+
+  <!-- 2022-hoy -->
+  <article class="card" data-cat="ia" style="--accent:var(--violet)" data-year="2022 – hoy"
+    data-title="Web actual: IA generativa y sociedad hiperconectada"
+    data-img="https://sspark.genspark.ai/i/ZByaA5hvhTX4upSt?width=2560"
+    data-video="h8K49dD52WA"
+    data-src="https://openai.com/index/chatgpt/"
+    data-long="El 30 de noviembre de 2022, OpenAI lanzó ChatGPT y la inteligencia artificial generativa se integró a buscadores, aulas, hospitales y oficinas. Según la UIT, en 2024 unas 5.500 millones de personas (el 68 % de la humanidad) están conectadas. Streaming, computación en la nube, Internet de las cosas (IoT) e IA definen la web actual: ya no solo buscamos información, también conversamos y creamos con ella.">
+    <div class="thumb"><img src="https://sspark.genspark.ai/i/ZByaA5hvhTX4upSt?width=2560" alt="Inteligencia artificial generativa" loading="lazy"><span class="year">2022–hoy</span></div>
+    <div class="cbody">
+      <span class="tag">IA</span>
+      <h2>Web actual: IA generativa y sociedad hiperconectada</h2>
+      <p>Desde ChatGPT (2022), la IA se integra a buscadores, aulas y trabajos; 5.500 M de personas están en línea (UIT, 2024).</p>
+      <div class="dato">Dato: ChatGPT alcanzó 100 M de usuarios en unos 2 meses, un récord histórico.</div>
+      <span class="vermas">Haz clic para explorar →</span>
+    </div>
+  </article>
+
+</div></div>
+
+<footer>
+  <h4>Fuentes verificadas</h4>
+  <ul>
+    <li>ICANN — <a href="https://www.icann.org/en/blogs/details/the-first-message-transmission-29-10-2019-en" target="_blank" rel="noopener">The First Message Transmission (1969)</a></li>
+    <li>SRI International — <a href="https://www.sri.com/hoi/arpanet/" target="_blank" rel="noopener">ARPANET</a></li>
+    <li>Wikipedia — <a href="https://en.wikipedia.org/wiki/Flag_day_(computing)" target="_blank" rel="noopener">Flag day: migración a TCP/IP (1983)</a></li>
+    <li>CERN / info.cern.ch — <a href="https://info.cern.ch/Proposal.html" target="_blank" rel="noopener">Propuesta original de Tim Berners-Lee (1989)</a></li>
+    <li>CERN — <a href="https://home.cern/science/computing/the-birth-of-the-web/short-history-web/" target="_blank" rel="noopener">A short history of the Web</a></li>
+    <li>Illinois Distributed Museum — <a href="https://distributedmuseum.illinois.edu/exhibit/mosaic/" target="_blank" rel="noopener">Mosaic (1993)</a></li>
+    <li>Wikipedia — <a href="https://en.wikipedia.org/wiki/Web_2.0" target="_blank" rel="noopener">Web 2.0</a> · O'Reilly — <a href="https://www.oreilly.com/pub/a/web2/archive/what-is-web-20.html" target="_blank" rel="noopener">What Is Web 2.0</a></li>
+    <li>Apple Newsroom — <a href="https://www.apple.com/newsroom/2007/06/28iPhone-Premieres-This-Friday-Night-at-Apple-Retail-Stores/" target="_blank" rel="noopener">Lanzamiento del iPhone (2007)</a></li>
+    <li>OpenAI — <a href="https://openai.com/index/chatgpt/" target="_blank" rel="noopener">Introducing ChatGPT (2022)</a></li>
+    <li>UIT — <a href="https://www.itu.int/itu-d/reports/statistics/2024/11/10/ff24-internet-use/" target="_blank" rel="noopener">Facts and Figures 2024: 5.500 millones conectados</a></li>
+  </ul>
+  <p class="credit">Línea de tiempo interactiva realizada con HTML/CSS/JS · Todas las imágenes son de uso libre (CC/dominio público) · Los videos se reproducen desde YouTube.</p>
+</footer>
+
+<div class="modal" id="modal">
+  <div class="sheet" id="sheet">
+    <span class="y" id="mYear"></span>
+    <h3 id="mTitle"></h3>
+    <div id="mImgs"></div>
+    <p id="mLong"></p>
+    <div class="frame"><iframe id="mVideo" src="" title="Video del hito" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+    <p><a class="srclink" id="mSrc" href="#" target="_blank" rel="noopener">→ Leer la fuente completa del hito</a></p>
+    <button class="close" id="mClose">Cerrar</button>
+  </div>
+</div>
+
+<script>
+  const track=document.getElementById('track');
+  document.getElementById('prev').onclick=()=>track.scrollBy({left:-520,behavior:'smooth'});
+  document.getElementById('next').onclick=()=>track.scrollBy({left:520,behavior:'smooth'});
+  // drag to scroll
+  let down=false,sx=0,sl=0;
+  track.addEventListener('pointerdown',e=>{down=true;sx=e.clientX;sl=track.scrollLeft;});
+  window.addEventListener('pointerup',()=>down=false);
+  track.addEventListener('pointermove',e=>{if(down){track.scrollLeft=sl-(e.clientX-sx);}});
+  // filters
+  document.getElementById('chips').addEventListener('click',e=>{
+    const b=e.target.closest('.chip'); if(!b)return;
+    document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+    b.classList.add('active');
+    const f=b.dataset.f;
+    document.querySelectorAll('.card').forEach(c=>c.classList.toggle('hidden',f!=='all'&&c.dataset.cat!==f));
+  });
+  // modal
+  const modal=document.getElementById('modal'),mVideo=document.getElementById('mVideo');
+  document.querySelectorAll('.card').forEach(c=>{
+    c.addEventListener('click',()=>{
+      document.getElementById('mYear').textContent=c.dataset.year;
+      document.getElementById('mTitle').textContent=c.dataset.title;
+      document.getElementById('mLong').textContent=c.dataset.long;
+      const imgs=c.dataset.img2?[c.dataset.img,c.dataset.img2]:[c.dataset.img];
+      document.getElementById('mImgs').innerHTML=imgs.map(u=>`<img src="${u}" alt="${c.dataset.title}">`).join('');
+      mVideo.src=`https://www.youtube.com/embed/${c.dataset.video}`;
+      document.getElementById('mSrc').href=c.dataset.src;
+      modal.classList.add('open'); document.body.style.overflow='hidden';
+    });
+  });
+  function closeModal(){modal.classList.remove('open');mVideo.src='';document.body.style.overflow='';}
+  document.getElementById('mClose').onclick=closeModal;
+  modal.addEventListener('click',e=>{if(e.target===modal)closeModal();});
+  window.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
